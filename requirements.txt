@@ -1,0 +1,12 @@
+langchain
+openai
+yfinance
+pandas
+numpy
+TA-Lib
+scikit-learn
+requests
+pydantic
+python-dotenv
+matplotlib
+streamlit

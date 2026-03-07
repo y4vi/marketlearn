@@ -15,7 +15,6 @@ An educational Python application for learning about stock market analysis throu
 
 - **Backend**: Python 3.9+
 - **Data**: yfinance, pandas, numpy
-- **Indicators**: TA-Lib
 - **AI**: OpenAI API
 - **Visualization**: Matplotlib
 - **Web UI**: Streamlit
@@ -37,13 +36,7 @@ source .venv/bin/activate
 pip install --upgrade pip
 ```
 
-2) Install OS-level dependency for TA-Lib (macOS Homebrew)
-
-```bash
-brew install ta-lib
-```
-
-3) Install Python dependencies
+2) Install Python dependencies
 
 ```bash
 pip install -r requirements.txt
@@ -72,7 +65,6 @@ streamlit run app.py
 
 Troubleshooting
 
-- If installation fails on `TA-Lib`, ensure `brew install ta-lib` completed successfully and retry `pip install -r requirements.txt`.
 - If the agent raises an error about `OPENAI_API_KEY`, set the env variable or place it in `.env`.
 
 Files of interest: `main.py`, `app.py`, `config/settings.py`, `ai/ai/agent.py`.

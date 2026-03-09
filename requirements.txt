@@ -3,6 +3,7 @@ openai
 yfinance
 pandas
 numpy
+TA-Lib
 scikit-learn
 requests
 pydantic

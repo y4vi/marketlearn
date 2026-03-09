@@ -14,17 +14,33 @@ def get_disclaimer():
 
 ticker = input("Enter stock ticker (default: AAPL): ").strip() or "AAPL"
 
-df = fetch_market_data(ticker)
+df = fetch_market_data(ticker, period="1y")
 df = add_basic_indicators(df)
 
 trend_description = describe_trend(df)
 
-query = input("Enter your query for the AI agent: ").strip()
+print("\nYou can ask follow-up questions. Type 'quit' to exit.\n")
 
-if not query:
-    query = f"Stock Analysis for {ticker}: Trend Summary: {trend_description}. Explain this data clearly without giving financial advice or predictions."
+history = []
+while True:
+    query = input("You: ").strip()
+    if query.lower() in ('quit', 'exit', 'q'):
+        break
+    if not query:
+        continue
 
-response = agent.invoke({"input": query})
+    agent_input = f"Stock: {ticker}\nTrend summary: {trend_description}\nUser message: {query}"
 
-print("\n" + response.get("output", response))
+    response = agent.invoke({
+        "input": agent_input,
+        "history": history,
+        "ticker": ticker,
+    })
+
+    output = response.get("output", str(response))
+    print(f"\nAssistant: {output}\n")
+
+    history.append({"role": "user", "content": query})
+    history.append({"role": "assistant", "content": output})
+
 print("\n" + get_disclaimer())

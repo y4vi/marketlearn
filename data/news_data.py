@@ -19,3 +19,16 @@ def fetch_news(query: str, limit=5):
     response.raise_for_status()
 
     return response.json().get("articles", [])
+
+# Summarize news for agent context
+def fetch_news_context(query: str, limit=5):
+    articles = fetch_news(query, limit)
+    if not articles:
+        return "No recent news found."
+    summaries = []
+    for article in articles:
+        title = article.get("title", "")
+        desc = article.get("description", "")
+        source = article.get("source", {}).get("name", "")
+        summaries.append(f"[{source}] {title}: {desc}")
+    return "\n".join(summaries)

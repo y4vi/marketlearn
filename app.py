@@ -204,14 +204,43 @@ if "last_df" not in st.session_state:
     st.session_state.last_df = None
 
 # ── Helper: extract ticker from user message ──
+COMPANY_TO_TICKER = {
+    'apple': 'AAPL', 'microsoft': 'MSFT', 'google': 'GOOGL', 'alphabet': 'GOOGL',
+    'amazon': 'AMZN', 'tesla': 'TSLA', 'meta': 'META', 'facebook': 'META',
+    'nvidia': 'NVDA', 'netflix': 'NFLX', 'amd': 'AMD', 'intel': 'INTC',
+    'disney': 'DIS', 'nike': 'NKE', 'coca-cola': 'KO', 'coca cola': 'KO',
+    'pepsi': 'PEP', 'pepsico': 'PEP', 'walmart': 'WMT', 'costco': 'COST',
+    'starbucks': 'SBUX', 'boeing': 'BA', 'ford': 'F', 'gm': 'GM',
+    'general motors': 'GM', 'general electric': 'GE', 'ibm': 'IBM',
+    'oracle': 'ORCL', 'salesforce': 'CRM', 'adobe': 'ADBE', 'spotify': 'SPOT',
+    'uber': 'UBER', 'lyft': 'LYFT', 'airbnb': 'ABNB', 'snap': 'SNAP',
+    'snapchat': 'SNAP', 'twitter': 'TWTR', 'paypal': 'PYPL', 'visa': 'V',
+    'mastercard': 'MA', 'jpmorgan': 'JPM', 'jp morgan': 'JPM',
+    'goldman sachs': 'GS', 'bank of america': 'BAC', 'wells fargo': 'WFC',
+    'morgan stanley': 'MS', 'citigroup': 'C', 'berkshire': 'BRK-B',
+    'johnson & johnson': 'JNJ', 'pfizer': 'PFE', 'moderna': 'MRNA',
+    'qualcomm': 'QCOM', 'broadcom': 'AVGO', 'shopify': 'SHOP',
+    'palantir': 'PLTR', 'snowflake': 'SNOW', 'coinbase': 'COIN',
+    'robinhood': 'HOOD', 'zoom': 'ZM', 'dropbox': 'DBX',
+    'sony': 'SONY', 'samsung': '005930.KS', 'toyota': 'TM',
+    'alibaba': 'BABA', 'tencent': 'TCEHY', 'baidu': 'BIDU',
+}
+
 def extract_ticker(text):
-    """Try to extract a stock ticker from natural language."""
-    # Match common patterns: $AAPL, AAPL, "ticker AAPL", etc.
-    patterns = [
-        r'\$([A-Z]{1,5})\b',           # $AAPL
-        r'\b([A-Z]{1,5})\b',           # AAPL (uppercase 1-5 letters)
-    ]
-    # Common words to exclude
+    """Extract a stock ticker from natural language, supporting company names."""
+    text_lower = text.lower()
+
+    # 1. Check for company names first (longest match wins)
+    for name in sorted(COMPANY_TO_TICKER.keys(), key=len, reverse=True):
+        if name in text_lower:
+            return COMPANY_TO_TICKER[name]
+
+    # 2. Match $AAPL style
+    dollar_match = re.findall(r'\$([A-Z]{1,5})\b', text)
+    if dollar_match:
+        return dollar_match[0]
+
+    # 3. Match uppercase tickers
     exclude = {
         'I', 'A', 'AN', 'THE', 'AND', 'OR', 'BUT', 'FOR', 'NOT', 'IS',
         'IT', 'TO', 'IN', 'ON', 'AT', 'BY', 'OF', 'IF', 'SO', 'DO',
@@ -221,12 +250,15 @@ def extract_ticker(text):
         'HIS', 'HER', 'ITS', 'ALL', 'ANY', 'FEW', 'NEW', 'OLD', 'OUR',
         'OWN', 'SAY', 'SHE', 'TOO', 'USE', 'WAY', 'WHO', 'DAY', 'GET',
         'HIM', 'MAY', 'OUT', 'PUT', 'RUN', 'SET', 'TRY', 'TWO', 'YET',
+        'BASED', 'LAST', 'FIVE', 'YEARS', 'NEXT', 'MIGHT', 'PERFORMANCE',
+        'EVALUATE', 'STOCK', 'ABOUT', 'TELL', 'SHOW', 'WHAT', 'HOW',
+        'RECENT', 'TREND', 'PRICE', 'MARKET', 'ANALYSIS', 'DATA',
     }
-    for pattern in patterns:
-        matches = re.findall(pattern, text)
-        for m in matches:
-            if m not in exclude and len(m) >= 2:
-                return m
+    matches = re.findall(r'\b([A-Z]{2,5})\b', text)
+    for m in matches:
+        if m not in exclude:
+            return m
+
     return None
 
 # ── Display conversation history ──

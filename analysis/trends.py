@@ -2,13 +2,10 @@ import pandas as pd
 
 
 def describe_trend(df):
-    """
-    Placeholder function for describing trends.
-    """
+    """Generate a detailed statistical summary of the stock's performance."""
     if df is None or df.empty:
         return "No data available to describe trend."
 
-    # Use simple signals: recent slope, SMA vs price
     try:
         close = df['Close'].dropna()
     except Exception:
@@ -17,30 +14,65 @@ def describe_trend(df):
     if len(close) < 2:
         return "Not enough data to determine trend."
 
-    # recent slope (linear fit on last N points)
+    parts = []
+
+    # Price range and current
+    current_price = close.iloc[-1]
+    start_price = close.iloc[0]
+    high = close.max()
+    low = close.min()
+    total_change = ((current_price - start_price) / start_price) * 100
+    parts.append(f"Current price: ${current_price:.2f}")
+    parts.append(f"Period start price: ${start_price:.2f}")
+    parts.append(f"Period change: {total_change:+.2f}%")
+    parts.append(f"Period high: ${high:.2f}, Period low: ${low:.2f}")
+
+    # Recent performance (last 20 days)
     n = min(20, len(close))
     recent = close[-n:]
-    x = list(range(len(recent)))
-    # linear slope (simple) — use differencing
-    slope = (recent.iloc[-1] - recent.iloc[0]) / max(1, len(recent)-1)
+    recent_change = ((recent.iloc[-1] - recent.iloc[0]) / recent.iloc[0]) * 100
+    parts.append(f"Last {n} days change: {recent_change:+.2f}%")
 
+    # Moving averages
+    if 'SMA_20' in df.columns and not df['SMA_20'].dropna().empty:
+        sma = df['SMA_20'].dropna().iloc[-1]
+        sma_vs = ((current_price - sma) / sma) * 100
+        parts.append(f"SMA 20: ${sma:.2f} (price is {sma_vs:+.2f}% vs SMA)")
+
+    if 'EMA_20' in df.columns and not df['EMA_20'].dropna().empty:
+        ema = df['EMA_20'].dropna().iloc[-1]
+        ema_vs = ((current_price - ema) / ema) * 100
+        parts.append(f"EMA 20: ${ema:.2f} (price is {ema_vs:+.2f}% vs EMA)")
+
+    # RSI
+    if 'RSI_14' in df.columns and not df['RSI_14'].dropna().empty:
+        rsi = df['RSI_14'].dropna().iloc[-1]
+        rsi_label = "overbought" if rsi > 70 else "oversold" if rsi < 30 else "neutral"
+        parts.append(f"RSI 14: {rsi:.1f} ({rsi_label})")
+
+    # Volume
+    if 'Volume' in df.columns and not df['Volume'].dropna().empty:
+        avg_vol = df['Volume'].mean()
+        recent_vol = df['Volume'].iloc[-5:].mean()
+        parts.append(f"Avg volume: {avg_vol:,.0f}, Recent 5-day avg: {recent_vol:,.0f}")
+
+    # Volatility (std of daily returns)
+    daily_returns = close.pct_change().dropna()
+    if len(daily_returns) > 1:
+        volatility = daily_returns.std() * 100
+        parts.append(f"Daily volatility: {volatility:.2f}%")
+
+    # Trend direction
     ma_short = recent.rolling(window=5, min_periods=1).mean().iloc[-1]
-    ma_long = recent.rolling(window=20, min_periods=1).mean().iloc[-1]
-
-    parts = []
-    if slope > 0:
-        parts.append("short-term upward slope")
-    elif slope < 0:
-        parts.append("short-term downward slope")
-    else:
-        parts.append("stable short-term price")
-
+    ma_long = recent.rolling(window=min(20, len(recent)), min_periods=1).mean().iloc[-1]
     if ma_short > ma_long:
-        parts.append("short MA is above long MA (bullish signal)")
+        parts.append("Trend signal: short MA above long MA (bullish)")
     elif ma_short < ma_long:
-        parts.append("short MA is below long MA (bearish signal)")
+        parts.append("Trend signal: short MA below long MA (bearish)")
+    else:
+        parts.append("Trend signal: neutral")
 
-    return ", ".join(parts)
+    return "\n".join(parts)
 
 class TrendAnalyzer:
     """

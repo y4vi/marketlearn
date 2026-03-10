@@ -10,7 +10,7 @@ from ai.ai.prompts import SYSTEM_PROMPT
 from config.settings import OPENAI_API_KEY
 
 _KEY = OPENAI_API_KEY or os.environ.get("OPENAI_API_KEY")
-_MODEL = os.environ.get("OPENAI_MODEL", "gpt-3.5-turbo")
+_MODEL = os.environ.get("OPENAI_MODEL", "gpt-4o")
 
 client = None
 if _KEY:
@@ -58,7 +58,7 @@ class SimpleAgent:
             model=self.model,
             messages=messages,
             temperature=self.temperature,
-            max_tokens=1200,
+            max_tokens=2000,
         )
 
         try:
